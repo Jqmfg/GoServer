@@ -1,0 +1,294 @@
+# Making a web server
+
+## Structs
+
+##### Server
+
+```
+type Server struct {`
+    Addr           string        // TCP address to listen on, ":http" if empty
+    Handler        Handler       // handler to invoke, http.DefaultServeMux if nil
+    ReadTimeout    time.Duration // maximum duration before timing out read of the request
+    WriteTimeout   time.Duration // maximum duration before timing out write of the response
+    MaxHeaderBytes int           // maximum size of request headers, DefaultMaxHeaderBytes if 0
+    TLSConfig      *tls.Config   // optional TLS config, used by ListenAndServeTLS
+
+    // TLSNextProto optionally specifies a function to take over
+    // ownership of the provided TLS connection when an NPN
+    // protocol upgrade has occurred.  The map key is the protocol
+    // name negotiated. The Handler argument should be used to
+    // handle HTTP requests and will initialize the Request's TLS
+    // and RemoteAddr if not already set.  The connection is
+    // automatically closed when the function returns.
+    TLSNextProto map[string]func(*Server, *tls.Conn, Handler)
+
+    // ConnState specifies an optional callback function that is
+    // called when a client connection changes state. See the
+    // ConnState type and associated constants for details.
+    ConnState func(net.Conn, ConnState)
+
+    // ErrorLog specifies an optional logger for errors accepting
+    // connections and unexpected behavior from handlers.
+    // If nil, logging goes to os.Stderr via the log package's
+    // standard logger.
+    ErrorLog *log.Logger
+    // contains filtered or unexported fields
+}
+```
+
+Defines the parameters for running an HTTP sever.
+The zero value for Server is a valid configuration.
+
+e.g. `server := http.Server`
+
+##### ResponseWriter
+
+```
+type ResponseWriter interface {
+    // Header returns the header map that will be sent by
+    // WriteHeader. Changing the header after a call to
+    // WriteHeader (or Write) has no effect unless the modified
+    // headers were declared as trailers by setting the
+    // "Trailer" header before the call to WriteHeader.
+    // To suppress implicit response headers, set their value to nil.
+    Header() Header
+
+    // Write writes the data to the connection as part of an HTTP reply.
+    // If WriteHeader has not yet been called, Write calls WriteHeader(http.StatusOK)
+    // before writing the data.  If the Header does not contain a
+    // Content-Type line, Write adds a Content-Type set to the result of passing
+    // the initial 512 bytes of written data to DetectContentType.
+    Write([]byte) (int, error)
+
+    // WriteHeader sends an HTTP response header with status code.
+    // If WriteHeader is not called explicitly, the first call to Write
+    // will trigger an implicit WriteHeader(http.StatusOK).
+    // Thus explicit calls to WriteHeader are mainly used to
+    // send error codes.
+    WriteHeader(int)
+}
+```
+
+`ResponseWriter ` is an interface used by an HTTP handler o construct an HTTP response
+
+e.g.
+``` // simple handler that just responds with a fixed string
+func requestHandler1(w http.ResponseWriter, r *http.Request) {
+	io.WriteString(w, "Hello world!")
+}
+```
+
+##### Request
+
+```
+type Request struct {
+    // Method specifies the HTTP method (GET, POST, PUT, etc.).
+    // For client requests an empty string means GET.
+    Method string
+
+    // URL specifies either the URI being requested (for server
+    // requests) or the URL to access (for client requests).
+    //
+    // For server requests the URL is parsed from the URI
+    // supplied on the Request-Line as stored in RequestURI.  For
+    // most requests, fields other than Path and RawQuery will be
+    // empty. (See RFC 2616, Section 5.1.2)
+    //
+    // For client requests, the URL's Host specifies the server to
+    // connect to, while the Request's Host field optionally
+    // specifies the Host header value to send in the HTTP
+    // request.
+    URL *url.URL
+
+    // The protocol version for incoming requests.
+    // Client requests always use HTTP/1.1.
+    Proto      string // "HTTP/1.0"
+    ProtoMajor int    // 1
+    ProtoMinor int    // 0
+
+    // A header maps request lines to their values.
+    // If the header says
+    //
+    //	accept-encoding: gzip, deflate
+    //	Accept-Language: en-us
+    //	Connection: keep-alive
+    //
+    // then
+    //
+    //	Header = map[string][]string{
+    //		"Accept-Encoding": {"gzip, deflate"},
+    //		"Accept-Language": {"en-us"},
+    //		"Connection": {"keep-alive"},
+    //	}
+    //
+    // HTTP defines that header names are case-insensitive.
+    // The request parser implements this by canonicalizing the
+    // name, making the first character and any characters
+    // following a hyphen uppercase and the rest lowercase.
+    //
+    // For client requests certain headers are automatically
+    // added and may override values in Header.
+    //
+    // See the documentation for the Request.Write method.
+    Header Header
+
+    // Body is the request's body.
+    //
+    // For client requests a nil body means the request has no
+    // body, such as a GET request. The HTTP Client's Transport
+    // is responsible for calling the Close method.
+    //
+    // For server requests the Request Body is always non-nil
+    // but will return EOF immediately when no body is present.
+    // The Server will close the request body. The ServeHTTP
+    // Handler does not need to.
+    Body io.ReadCloser
+
+    // ContentLength records the length of the associated content.
+    // The value -1 indicates that the length is unknown.
+    // Values >= 0 indicate that the given number of bytes may
+    // be read from Body.
+    // For client requests, a value of 0 means unknown if Body is not nil.
+    ContentLength int64
+
+    // TransferEncoding lists the transfer encodings from outermost to
+    // innermost. An empty list denotes the "identity" encoding.
+    // TransferEncoding can usually be ignored; chunked encoding is
+    // automatically added and removed as necessary when sending and
+    // receiving requests.
+    TransferEncoding []string
+
+    // Close indicates whether to close the connection after
+    // replying to this request (for servers) or after sending
+    // the request (for clients).
+    Close bool
+
+    // For server requests Host specifies the host on which the
+    // URL is sought. Per RFC 2616, this is either the value of
+    // the "Host" header or the host name given in the URL itself.
+    // It may be of the form "host:port".
+    //
+    // For client requests Host optionally overrides the Host
+    // header to send. If empty, the Request.Write method uses
+    // the value of URL.Host.
+    Host string
+
+    // Form contains the parsed form data, including both the URL
+    // field's query parameters and the POST or PUT form data.
+    // This field is only available after ParseForm is called.
+    // The HTTP client ignores Form and uses Body instead.
+    Form url.Values
+
+    // PostForm contains the parsed form data from POST, PATCH,
+    // or PUT body parameters.
+    //
+    // This field is only available after ParseForm is called.
+    // The HTTP client ignores PostForm and uses Body instead.
+    PostForm url.Values
+
+    // MultipartForm is the parsed multipart form, including file uploads.
+    // This field is only available after ParseMultipartForm is called.
+    // The HTTP client ignores MultipartForm and uses Body instead.
+    MultipartForm *multipart.Form
+
+    // Trailer specifies additional headers that are sent after the request
+    // body.
+    //
+    // For server requests the Trailer map initially contains only the
+    // trailer keys, with nil values. (The client declares which trailers it
+    // will later send.)  While the handler is reading from Body, it must
+    // not reference Trailer. After reading from Body returns EOF, Trailer
+    // can be read again and will contain non-nil values, if they were sent
+    // by the client.
+    //
+    // For client requests Trailer must be initialized to a map containing
+    // the trailer keys to later send. The values may be nil or their final
+    // values. The ContentLength must be 0 or -1, to send a chunked request.
+    // After the HTTP request is sent the map values can be updated while
+    // the request body is read. Once the body returns EOF, the caller must
+    // not mutate Trailer.
+    //
+    // Few HTTP clients, servers, or proxies support HTTP trailers.
+    Trailer Header
+
+    // RemoteAddr allows HTTP servers and other software to record
+    // the network address that sent the request, usually for
+    // logging. This field is not filled in by ReadRequest and
+    // has no defined format. The HTTP server in this package
+    // sets RemoteAddr to an "IP:port" address before invoking a
+    // handler.
+    // This field is ignored by the HTTP client.
+    RemoteAddr string
+
+    // RequestURI is the unmodified Request-URI of the
+    // Request-Line (RFC 2616, Section 5.1) as sent by the client
+    // to a server. Usually the URL field should be used instead.
+    // It is an error to set this field in an HTTP client request.
+    RequestURI string
+
+    // TLS allows HTTP servers and other software to record
+    // information about the TLS connection on which the request
+    // was received. This field is not filled in by ReadRequest.
+    // The HTTP server in this package sets the field for
+    // TLS-enabled connections before invoking a handler;
+    // otherwise it leaves the field nil.
+    // This field is ignored by the HTTP client.
+    TLS *tls.ConnectionState
+
+    // Cancel is an optional channel whose closure indicates that the client
+    // request should be regarded as canceled. Not all implementations of
+    // RoundTripper may support Cancel.
+    //
+    // For server requests, this field is not applicable.
+    Cancel <-chan struct{}
+}
+```
+
+A ` Request ` represents an HTTP request received by a server or to be sent by a client.
+The field semantic differ slightly between client and server usage.
+In addition to the notes on the fields below, see the documentation for ` Request.Write ` and ` RoundTripper `
+
+##### WriteString
+
+```
+func WriteString(w Writer, s string) (n int, err error) {
+```
+
+` WriteString ` writes the contents of the string ` s ` to ` w ` which accepts a slice of bytes.
+If ` w ` implements a `WriteString ` method, it is invoked directly.
+
+e.g. ` io.WriteString(http.ResponeWriter, "Hello World!") `
+
+##### ListenAndServe
+
+```
+func ListenAndServe(addr string, handler Handler) error {
+```
+
+ListenAndServe listens on the TCp network address addr and then calls Serve with handlers to handle requests on incoming connections.
+Handler is typically nil, in which case the DefaultServeMux is used.
+
+e.g. ` err := http.listenAndServe(":12345", nil) `
+
+##### Handler
+
+```
+type Handler interface {
+    ServeHTTP(ResponseWriter, *Request)
+}
+```
+
+Objects implementing the ` Handler ` interface can be registered to serve a particular path or subtree in the HTTP server.
+ServeHTTP should write reply headers and data to the ResponseWriter and then return.
+Returning signals that the request is finished and that the HTTP server can move on to the next request on the connection.
+If ServeHTTP panics, the server (the caller of ServeHTTP) assumes that the effect of the panic was isolated to the active request.
+It recovers the panic, logs a stack trace tot he server error log, and hangs up the connection.
+
+##### HandleFunc
+
+```
+func HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
+```
+
+` HandlFunc ` registers the handler function for the given pattern in the ` DefaultServeMux `.
+The documentation for ServeMux explains how patterns are matched
