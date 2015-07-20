@@ -2,7 +2,8 @@ package main
 
 import (
   "net/http"
-  "fmt"
+  "time"
+  "io"
   //"html/template"
 )
 
@@ -11,21 +12,35 @@ type Page struct {
   Body []byte
 }
 
-func myHandler(w http.ResponseWriter, r *http.Request) {
-  //var p = Page{Title: "testing", Body: []byte("Monkey see monkey do")}
-  fmt.Fprintf(w, "Welcome to the home page!")
+func hello(w http.ResponseWriter, r *http.Request) {
+  io.WriteString(w, "Hello World!")
 }
 
-/*func (myResponseWriter) Header() Header {
+type myHandler struct {
 
-}*/
+}
 
-/*func (myHandler) ServeHTTP(ResponseWriter, *Request) {
-  template.executeTemplate(http.ResponseWriter, "Testing", *Page)
-}*/
+var mux map[string]func(http.ResponseWriter, *http.Request)
+
+func (*myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+  if h, ok := mux[r.URL.String()]; ok {
+    h(w, r)
+    return
+  }
+  io.WriteString(w, "My server: " + r.URL.String())
+}
 
 func main() {
-  http.HandleFunc("/", myHandler)
-  //http.HandleFunc("/", myHandler)
-  http.ListenAndServe(":8080", nil)
+  mux := make(map[string]func(http.ResponseWriter, *http.Request))
+  mux["/"] = hello
+
+  s := &http.Server {
+    Addr: ":8080",
+    Handler: &myHandler{},
+    ReadTimeout: 10 * time.Second,
+    WriteTimeout: 10 * time.Second,
+    MaxHeaderBytes: 1 << 20,
+  }
+
+  s.ListenAndServe()
 }
