@@ -3,13 +3,9 @@ package main
 import (
   "net/http"
   "io"
+  "io/ioutil"
   //"html/template"
 )
-
-/*type Page struct {
-  Title string
-  Body []byte
-}*/
 
 type myHandler struct {
 
@@ -24,7 +20,9 @@ func (*myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func hello(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "Hello world!")
+	//io.WriteString(w, "Hello world!")
+  page, _ := ioutil.ReadFile("test.html")
+  io.WriteString(w, string(page))
 }
 
 var mux map[string]func(http.ResponseWriter, *http.Request)
