@@ -27,6 +27,10 @@ func hello(w http.ResponseWriter, r *http.Request) {
 
 var mux map[string]func(http.ResponseWriter, *http.Request)
 
+func mapMuxValues(m map[string]func(http.ResponseWriter, *http.Request)) {
+
+}
+
 func main() {
   mux = make(map[string]func(http.ResponseWriter, *http.Request))
   mux["/"] = hello
