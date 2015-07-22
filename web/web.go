@@ -49,12 +49,6 @@ func fileToMux(fileName string) map[string]func(http.ResponseWriter, *http.Reque
   }
   return m
 }
-//TODO: Make input value for file
-//TODO: Error handling
-/*func mapMuxValues() map[string]func(http.ResponseWriter, *http.Request) {
-  m := fileToMux(map.txt)
-  return m
-}*/
 
 func main() {
   mux = fileToMux("map.txt")
