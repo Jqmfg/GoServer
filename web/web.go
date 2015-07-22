@@ -27,7 +27,6 @@ func hello(w http.ResponseWriter, r *http.Request) {
 }
 
 var mux map[string]func(http.ResponseWriter, *http.Request)
-
 //TODO: Error handling
 func returnMuxFunc(fileName string) func(http.ResponseWriter, *http.Request) {
   return func(w http.ResponseWriter, r *http.Request) {
@@ -35,9 +34,8 @@ func returnMuxFunc(fileName string) func(http.ResponseWriter, *http.Request) {
     io.WriteString(w, string(page))
   }
 }
-
 //TODO: Error handling
-func fileToMux(fileName string) map[string]func(http.ResponseWriter, *http.Request) {
+func createMux(fileName string) map[string]func(http.ResponseWriter, *http.Request) {
   m := make(map[string]func(http.ResponseWriter, *http.Request))
 
   file, _ := os.Open(fileName)
@@ -47,11 +45,17 @@ func fileToMux(fileName string) map[string]func(http.ResponseWriter, *http.Reque
     curLine := strings.Split(scanner.Text(), ":")
     m[curLine[0]] = returnMuxFunc(curLine[1])
   }
+  fs := http.FileServer(http.Dir("../static"))
+  m["/"] = fs
   return m
 }
 
+//TODO: Implement fileserver for css ↓
+//https://groups.google.com/forum/#!topic/golang-nuts/aGMLK_2OHiM
 func main() {
-  mux = fileToMux("../files/map.txt")
+  fs := http.FileServer(http.Dir("../static"))
+
+  mux = createMux("../files/map.txt")
 
   s := http.Server {
     Addr: ":8080",
