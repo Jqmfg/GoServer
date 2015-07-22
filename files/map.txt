@@ -1,1 +1,1 @@
-/:test.html
+/:../files/test.html

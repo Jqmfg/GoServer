@@ -51,7 +51,7 @@ func fileToMux(fileName string) map[string]func(http.ResponseWriter, *http.Reque
 }
 
 func main() {
-  mux = fileToMux("map.txt")
+  mux = fileToMux("../files/map.txt")
 
   s := http.Server {
     Addr: ":8080",
