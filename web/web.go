@@ -4,6 +4,9 @@ import (
   "net/http"
   "io"
   "io/ioutil"
+  "bufio"
+  "os"
+  "strings"
 )
 
 type myHandler struct {
@@ -25,16 +28,36 @@ func hello(w http.ResponseWriter, r *http.Request) {
 
 var mux map[string]func(http.ResponseWriter, *http.Request)
 
-//TODO: Make input value for file
 //TODO: Error handling
-func mapMuxValues() map[string]func(http.ResponseWriter, *http.Request) {
-  var m = make(map[string]func(http.ResponseWriter, *http.Request))
-  m["/"] = hello
-  return m
+func returnMuxFunc(fileName string) func(http.ResponseWriter, *http.Request) {
+  return func(w http.ResponseWriter, r *http.Request) {
+    page, _ :=ioutil.ReadFile(fileName)
+    io.WriteString(w, string(page))
+  }
 }
 
+//TODO: Error handling
+func fileToMux(fileName string) map[string]func(http.ResponseWriter, *http.Request) {
+  m := make(map[string]func(http.ResponseWriter, *http.Request))
+
+  file, _ := os.Open(fileName)
+  defer file.Close()
+  scanner := bufio.NewScanner(file)
+  for scanner.Scan() {
+    curLine := strings.Split(scanner.Text(), ":")
+    m[curLine[0]] = returnMuxFunc(curLine[1])
+  }
+  return m
+}
+//TODO: Make input value for file
+//TODO: Error handling
+/*func mapMuxValues() map[string]func(http.ResponseWriter, *http.Request) {
+  m := fileToMux(map.txt)
+  return m
+}*/
+
 func main() {
-  mux = mapMuxValues()
+  mux = fileToMux("map.txt")
 
   s := http.Server {
     Addr: ":8080",
