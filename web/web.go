@@ -45,17 +45,17 @@ func createMux(fileName string) map[string]func(http.ResponseWriter, *http.Reque
     curLine := strings.Split(scanner.Text(), ":")
     m[curLine[0]] = returnMuxFunc(curLine[1])
   }
-  fs := http.FileServer(http.Dir("../static"))
-  m["/"] = fs
+  //TODO: Switch to looking for .css files rather than in templates
+  tempHandler := http.StripPrefix("/templates/", http.FileServer(http.Dir("/templates")))
+  m["templates"] = tempHandler.ServeHTTP
   return m
 }
 
 //TODO: Implement fileserver for css ↓
 //https://groups.google.com/forum/#!topic/golang-nuts/aGMLK_2OHiM
 func main() {
-  fs := http.FileServer(http.Dir("../static"))
-
-  mux = createMux("../files/map.txt")
+  //TODO: Make global variables for all of these
+  mux = createMux("templates/map.txt")
 
   s := http.Server {
     Addr: ":8080",
