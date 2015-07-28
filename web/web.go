@@ -4,15 +4,17 @@ import (
   "net/http"
   "io"
   "io/ioutil"
-  "bufio"
-  "os"
+  //"bufio"
+  //"os"
   "strings"
+  "log"
 )
 
 type myHandler struct {
 
 }
 
+//TODO: Make files based on file pathname rather than mux
 func (*myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path[1:]
   log.Println(path)
@@ -20,6 +22,24 @@ func (*myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
   data, err := ioutil.ReadFile(string(path))
 
   if err == nil {
+    var contentType string
+
+    switch {
+      case strings.HasSuffix(path, ".css"):
+        contentType = "text/css"
+      case strings.HasSuffix(path, ".html"):
+        contentType = "text/html"
+      case strings.HasSuffix(path, ".png"):
+        contentType = "image/png"
+      case strings.HasSuffix(path, ".js"):
+        contentType = "application/javascript"
+      case strings.HasSuffix(path, ".svg"):
+        contentType = "image/svg+xml"
+      default:
+        contentType = "text/plain"
+    }
+
+    w.Header().Add("Content Type" , contentType)
     w.Write(data)
   } else {
     w.WriteHeader(404)
@@ -33,7 +53,7 @@ func hello(w http.ResponseWriter, r *http.Request) {
 }
 
 var mux map[string]func(http.ResponseWriter, *http.Request)
-//TODO: Error handling
+//TODO: Add defaults through the mux
 
 //old
 /*
@@ -48,7 +68,6 @@ func returnMuxFunc(fileName string) func(http.ResponseWriter, *http.Request) {
 
 //old code for using a mux
 /*
-//todo: Error handling
 func createMux(fileName string) map[string]func(http.ResponseWriter, *http.Request) {
   m := make(map[string]func(http.ResponseWriter, *http.Request))
 
@@ -59,7 +78,6 @@ func createMux(fileName string) map[string]func(http.ResponseWriter, *http.Reque
     curLine := strings.Split(scanner.Text(), ":")
     m[curLine[0]] = returnMuxFunc(curLine[1])
   }
-  //todo: Switch to looking for .css files rather than in templates
   tempHandler := http.StripPrefix("/templates/", http.FileServer(http.Dir("/templates")))
   m["templates"] = tempHandler.ServeHTTP
   return m
@@ -70,7 +88,7 @@ func createMux(fileName string) map[string]func(http.ResponseWriter, *http.Reque
 //https://groups.google.com/forum/#!topic/golang-nuts/aGMLK_2OHiM
 func main() {
   //TODO: Make global variables for all of these
-  mux = createMux("templates/map.txt")
+  //mux = createMux("templates/map.txt")
 
   s := http.Server {
     Addr: ":8080",
