@@ -37,24 +37,6 @@ func createRequestRouter(fileName string) map[string]string {
   return r
 }
 
-//old code for using a mux
-/*
-func createMux(fileName string) map[string]func(http.ResponseWriter, *http.Request) {
-  m := make(map[string]func(http.ResponseWriter, *http.Request))
-
-  file, _ := os.Open(fileName)
-  defer file.Close()
-  scanner := bufio.NewScanner(file)
-  for scanner.Scan() {
-    curLine := strings.Split(scanner.Text(), ":")
-    m[curLine[0]] = returnMuxFunc(curLine[1])
-  }
-  tempHandler := http.StripPrefix("/templates/", http.FileServer(http.Dir("/templates")))
-  m["templates"] = tempHandler.ServeHTTP
-  return m
-}
-*/
-
 func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 
@@ -93,7 +75,6 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
   //TODO: Make global variables for all of these
-  //mux = createMux("templates/map.txt")
   requestRouter := createRequestRouter("templates/map.txt")
 
   s := http.Server {
