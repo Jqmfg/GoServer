@@ -7,7 +7,7 @@ import (
   "bufio"
   "os"
   "strings"
-  "log"
+  "github.com/Jqmfg/GoServer/logging"
 )
 
 var mux map[string]func(http.ResponseWriter, *http.Request)
@@ -46,7 +46,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     path = h.requestRouter[path]
   }
   //TODO: Make a log file
-  log.Println(r.URL.Path + ": accessing " + path)
+  logging.LogWebPath(r.URL.Path, path, "/log/visit.log")
 
   //TODO: Error handling
   data, err := ioutil.ReadFile(string(path))
