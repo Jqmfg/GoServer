@@ -23,10 +23,10 @@ func returnMuxFunc(fileName string) func(http.ResponseWriter, *http.Request) {
   }
 }
 
-//TODO: Error Handling
 func createRequestRouter(fileName string) map[string]string {
   r := make(map[string]string)
 
+  //TODO: Error Handling
   file, _ := os.Open(fileName)
   defer file.Close()
   scanner := bufio.NewScanner(file)
@@ -38,13 +38,17 @@ func createRequestRouter(fileName string) map[string]string {
 }
 
 func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path
+	path := r.URL.Path[1:]
 
+  //NOTE: Currently must specify the full path of additional files in html files (e.g. /templates/style.css)
+  //TODO: Correct to not have to specify full path of additional files in html files
   if(h.requestRouter[path] != "") {
     path = h.requestRouter[path]
   }
+  //TODO: Make a log file
   log.Println(r.URL.Path + ": accessing " + path)
 
+  //TODO: Error handling
   data, err := ioutil.ReadFile(string(path))
 
   if err == nil {

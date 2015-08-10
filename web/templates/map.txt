@@ -1,2 +1,2 @@
-/:templates/test.html
+:templates/test.html
 go:templates/test.html
