@@ -4,20 +4,64 @@ import (
   "net/http"
   "io"
   "io/ioutil"
-  //"bufio"
-  //"os"
+  "bufio"
+  "os"
   "strings"
   "log"
 )
 
-type myHandler struct {
+var mux map[string]func(http.ResponseWriter, *http.Request)
 
+type myHandler struct {
+  requestRouter map[string]string
 }
 
-//TODO: Make files based on file pathname rather than mux
-func (*myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path[1:]
-  log.Println(path)
+func returnMuxFunc(fileName string) func(http.ResponseWriter, *http.Request) {
+  return func(w http.ResponseWriter, r *http.Request) {
+    page, _ :=ioutil.ReadFile(fileName)
+    io.WriteString(w, string(page))
+  }
+}
+
+//TODO: Error Handling
+func createRequestRouter(fileName string) map[string]string {
+  r := make(map[string]string)
+
+  file, _ := os.Open(fileName)
+  defer file.Close()
+  scanner := bufio.NewScanner(file)
+  for scanner.Scan() {
+    curLine := strings.Split(scanner.Text(), ":")
+    r[curLine[0]] = curLine[1]
+  }
+  return r
+}
+
+//old code for using a mux
+/*
+func createMux(fileName string) map[string]func(http.ResponseWriter, *http.Request) {
+  m := make(map[string]func(http.ResponseWriter, *http.Request))
+
+  file, _ := os.Open(fileName)
+  defer file.Close()
+  scanner := bufio.NewScanner(file)
+  for scanner.Scan() {
+    curLine := strings.Split(scanner.Text(), ":")
+    m[curLine[0]] = returnMuxFunc(curLine[1])
+  }
+  tempHandler := http.StripPrefix("/templates/", http.FileServer(http.Dir("/templates")))
+  m["templates"] = tempHandler.ServeHTTP
+  return m
+}
+*/
+
+func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
+
+  if(h.requestRouter[path] != "") {
+    path = h.requestRouter[path]
+  }
+  log.Println(r.URL.Path + ": accessing " + path)
 
   data, err := ioutil.ReadFile(string(path))
 
@@ -47,52 +91,14 @@ func (*myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
   }
 }
 
-func hello(w http.ResponseWriter, r *http.Request) {
-  page, _ := ioutil.ReadFile("templates/test.html")
-  io.WriteString(w, string(page))
-}
-
-var mux map[string]func(http.ResponseWriter, *http.Request)
-//TODO: Add defaults through the mux
-
-//old
-/*
-func returnMuxFunc(fileName string) func(http.ResponseWriter, *http.Request) {
-  return func(w http.ResponseWriter, r *http.Request) {
-    page, _ :=ioutil.ReadFile(fileName)
-    io.WriteString(w, string(page))
-  }
-}
-*/
-
-
-//old code for using a mux
-/*
-func createMux(fileName string) map[string]func(http.ResponseWriter, *http.Request) {
-  m := make(map[string]func(http.ResponseWriter, *http.Request))
-
-  file, _ := os.Open(fileName)
-  defer file.Close()
-  scanner := bufio.NewScanner(file)
-  for scanner.Scan() {
-    curLine := strings.Split(scanner.Text(), ":")
-    m[curLine[0]] = returnMuxFunc(curLine[1])
-  }
-  tempHandler := http.StripPrefix("/templates/", http.FileServer(http.Dir("/templates")))
-  m["templates"] = tempHandler.ServeHTTP
-  return m
-}
-*/
-
-//TODO: Implement fileserver for css ↓
-//https://groups.google.com/forum/#!topic/golang-nuts/aGMLK_2OHiM
 func main() {
   //TODO: Make global variables for all of these
   //mux = createMux("templates/map.txt")
+  requestRouter := createRequestRouter("templates/map.txt")
 
   s := http.Server {
     Addr: ":8080",
-    Handler: &myHandler{},
+    Handler: &myHandler{requestRouter},
   }
 
   s.ListenAndServe()
