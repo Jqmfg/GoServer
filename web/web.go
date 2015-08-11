@@ -46,7 +46,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     path = h.requestRouter[path]
   }
   //TODO: Make a log file
-  logging.LogWebPath(r.URL.Path, path, "/log/visit.log")
+  logging.LogWebPath(r.URL.Path, path, "log/visit.log")
 
   //TODO: Error handling
   data, err := ioutil.ReadFile(string(path))

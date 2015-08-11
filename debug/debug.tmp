@@ -1,0 +1,25 @@
+C:\Users\dthien\Documents\Go\src\github.com\Jqmfg\GoServer\web>go run web.go
+# github.com/Jqmfg/GoServer/logging
+..\logging\logging.go:21: cannot convert fInfo (type os.FileInfo) to type string
+
+..\logging\logging.go:22: cannot convert err (type error) to type string
+
+C:\Users\dthien\Documents\Go\src\github.com\Jqmfg\GoServer\web>go run web.go
+<nil>
+GetFileAttributesEx /log/visit.log: The system cannot find the path specified.
+open /log/visit.log: The system cannot find the path specified.
+invalid argument
+<nil>
+GetFileAttributesEx /log/visit.log: The system cannot find the path specified.
+open /log/visit.log: The system cannot find the path specified.
+invalid argument
+exit status 2
+
+C:\Users\dthien\Documents\Go\src\github.com\Jqmfg\GoServer\web>go run web.go
+open /log/visit.log: The system cannot find the path specified.
+invalid argument
+open /log/visit.log: The system cannot find the path specified.
+invalid argument
+exit status 2
+
+C:\Users\dthien\Documents\Go\src\github.com\Jqmfg\GoServer\web>
