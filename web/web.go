@@ -45,8 +45,6 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
   if(h.requestRouter[path] != "") {
     path = h.requestRouter[path]
   }
-  //TODO: Make a log file
-  logging.LogWebPath(r.URL.Path, path, "log/visit.log")
 
   //TODO: Error handling
   data, err := ioutil.ReadFile(string(path))
@@ -71,9 +69,11 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
     w.Header().Add("Content Type", contentType)
     w.Write(data)
+    logging.LogWebPath("log/visit.log", r.URL.Path, path)
   } else {
     w.WriteHeader(404)
     w.Write([]byte("404 error find another page. " + http.StatusText(404)))
+    logging.LogWebPath("log/visit.log", r.URL.Path, "404")
   }
 }
 
@@ -85,6 +85,7 @@ func main() {
     Addr: ":8080",
     Handler: &myHandler{requestRouter},
   }
+  logging.StartServer(s)
 
   s.ListenAndServe()
 }
