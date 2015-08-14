@@ -1,73 +1,62 @@
 package logging
 
 import (
-  "errors"
-  "fmt"
   "os"
   "io"
+  "net/http"
+  "time"
   //"syscall"
 )
 
-//TODO: Decide if should use a logger struct
+//TODO: Make the log files come from global config file
 
-func check(e error) {
-  if(e != nil) {
-    panic(e)
+func writeToFile(logFile string, toWrite string) error {
+  //NOTE: First parameter is FileInfo
+  _, err := os.Stat(logFile)
+  if(err != nil) {
+    //TODO: Error checking
+    fcreated, _ := os.Create(logFile)
+    fcreated.Close()
+    //TODO: log that the file was created
   }
+  //TODO: Check if this needs error checking
+  //TODO: Check syscall.O_RDWR
+  //NOTE: os.Create() returns type File
+  file, _ := os.OpenFile(logFile, os.O_APPEND | os.O_WRONLY, 0666)
+
+  //TODO: Include timestamp
+  //TODO: Include ip?
+  //TODO: Additional info for 404
+  //TODO: Rework to give better info
+  //TODO: Check if need to append a newline
+  //NOTE: First return values returns number of bytes written
+  _, err = io.WriteString(file, "TIMESTAMP: " + time.Now().UTC().Format("2006-01-02 15:04:05 (UTC)") + " | " + toWrite + "\n")
+
+  if(err != nil) {
+    //TODO: Log error
+    logErrors("log/errors.log", "Error writing file: " + err.Error())
+    return err
+  }
+  file.Close()
+  return err
+}
+
+func logErrors(logFile string, toWrite string) error {
+  //TODO: Include timestamp
+  //NOTE: First return value returns number of bytes writen
+  err := writeToFile(logFile, toWrite)
+  //TODO: Check for using: return errors.New("nil")
+  return err
 }
 
 //TODO: Make functions for checking and opening files
 
-func LogWebPath(requestedURL string, accessedURL string, logFile string) error {
-  //TODO: Ensure file and directory exist
+func LogWebPath(logFile string, requestedURL string, accessedURL string) error {
+  err := writeToFile(logFile, requestedURL + " was requested | " + accessedURL + " was accessed")
   //TODO: Separate file for error logging
-  //NOTE: First parameter is FileInfo
-  _, err := os.Stat(logFile)
-  if(err != nil) {
-    //TODO: Separate file for error logging
-    //NOTE: os.Create returns type File
-    fcreated, err := os.Create(logFile)
-    fcreated.Close()
-    fmt.Println(err)
-  }
-
-  //TODO: Separate file for error logging
-  //NOTE: The file should exist here
-  file, _ := os.OpenFile(logFile, os.O_APPEND|os.O_WRONLY, 0666)
-
-  //TODO: Include timestamp
-  //TODO: Include ip?
-  //NOTE: First return value returns number of bytes writen
-  //TODO: Additional info for 404
-  //TODO: Rework to give better info
-  _, err = io.WriteString(file, requestedURL + " was requested | " + accessedURL + " was accessed\n")
-  //TODO: Separate file for error logging
-  if(err != nil) {
-    fmt.Println(err)
-    return err
-  }
-  file.Close()
-  return errors.New("nil")
+  return err
 }
 
-func logErrors(toWrite string, logFile string) error {
-  _, err := os.Stat(logFile)
-  if(err != nil) {
-    fcreated, err :=os.Create(logFile)
-    fcreated.Close()
-    fmt.Println(err)
-  }
-  //TODO: Check syscall.O_RDWR
-  file, _ := os.OpenFile(logFile, os.O_APPEND|os.O_WRONLY, 0666)
+func StartServer(server http.Server) {
 
-  //TODO: Include timestamp
-  //NOTE: First return value returns number of bytes writen
-  _, err = io.WriteString(file, toWrite + "\n")
-
-  if(err != nil) {
-    fmt.Println("Error writing to log file!")
-    fmt.Println(err)
-    return err
-  }
-  return err
 }
