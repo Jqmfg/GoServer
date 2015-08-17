@@ -24,7 +24,6 @@ func writeToFile(logFile string, toWrite string) error {
   //NOTE: os.Create() returns type File
   file, _ := os.OpenFile(logFile, os.O_APPEND | os.O_WRONLY, 0666)
 
-  //TODO: Include timestamp
   //TODO: Include ip?
   //TODO: Additional info for 404
   //TODO: Rework to give better info
@@ -33,7 +32,6 @@ func writeToFile(logFile string, toWrite string) error {
   _, err = io.WriteString(file, "TIMESTAMP: " + time.Now().UTC().Format("2006-01-02 15:04:05 (UTC)") + " | " + toWrite + "\n")
 
   if(err != nil) {
-    //TODO: Log error
     logErrors("log/errors.log", "Error writing file: " + err.Error())
     return err
   }
@@ -42,7 +40,6 @@ func writeToFile(logFile string, toWrite string) error {
 }
 
 func logErrors(logFile string, toWrite string) error {
-  //TODO: Include timestamp
   //NOTE: First return value returns number of bytes writen
   err := writeToFile(logFile, toWrite)
   //TODO: Check for using: return errors.New("nil")
@@ -51,8 +48,9 @@ func logErrors(logFile string, toWrite string) error {
 
 //TODO: Make functions for checking and opening files
 
-func LogWebPath(logFile string, requestedURL string, accessedURL string) error {
-  err := writeToFile(logFile, requestedURL + " was requested | " + accessedURL + " was accessed")
+//TODO: Condense arguments
+func LogWebPath(logFile string, requestedURL string, accessedURL string, r *http.Request) error {
+  err := writeToFile(logFile, r.RemoteAddr + " | " + requestedURL + " was requested | " + accessedURL + " was accessed")
   //TODO: Separate file for error logging
   return err
 }

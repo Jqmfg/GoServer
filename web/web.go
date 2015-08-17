@@ -69,11 +69,11 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
     w.Header().Add("Content Type", contentType)
     w.Write(data)
-    logging.LogWebPath("log/visit.log", r.URL.Path, path)
+    logging.LogWebPath("log/visit.log", r.URL.Path, path, r)
   } else {
     w.WriteHeader(404)
     w.Write([]byte("404 error find another page. " + http.StatusText(404)))
-    logging.LogWebPath("log/visit.log", r.URL.Path, "404")
+    logging.LogWebPath("log/visit.log", r.URL.Path, "404", r)
   }
 }
 
