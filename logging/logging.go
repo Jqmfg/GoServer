@@ -5,7 +5,7 @@ import (
   "io"
   "net/http"
   "time"
-  //"syscall"
+  "fmt"
 )
 
 //TODO: Make the log files come from global config file
@@ -20,14 +20,12 @@ func writeToFile(logFile string, toWrite string) error {
     //TODO: log that the file was created
   }
   //TODO: Check if this needs error checking
-  //TODO: Check syscall.O_RDWR
   //NOTE: os.Create() returns type File
-  file, _ := os.OpenFile(logFile, os.O_APPEND | os.O_WRONLY, 0666)
+  file, openErr := os.OpenFile(logFile, os.O_APPEND | os.O_WRONLY, 0666)
+  if (openErr != nil) {
+    fmt.Println("Error writting to file: " + logFile)
+  }
 
-  //TODO: Include ip?
-  //TODO: Additional info for 404
-  //TODO: Rework to give better info
-  //TODO: Check if need to append a newline
   //NOTE: First return values returns number of bytes written
   _, err = io.WriteString(file, "TIMESTAMP: " + time.Now().UTC().Format("2006-01-02 15:04:05 (UTC)") + " | " + toWrite + "\n")
 
@@ -42,7 +40,6 @@ func writeToFile(logFile string, toWrite string) error {
 func logErrors(logFile string, toWrite string) error {
   //NOTE: First return value returns number of bytes writen
   err := writeToFile(logFile, toWrite)
-  //TODO: Check for using: return errors.New("nil")
   return err
 }
 

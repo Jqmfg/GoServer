@@ -10,6 +10,10 @@ import (
   "github.com/Jqmfg/GoServer/logging"
 )
 
+//TODO: Ensure that access to files is restricted
+//TODO: Research golang GUIs
+//TODO: Make GUI outline
+
 var mux map[string]func(http.ResponseWriter, *http.Request)
 
 type myHandler struct {
@@ -26,6 +30,7 @@ func returnMuxFunc(fileName string) func(http.ResponseWriter, *http.Request) {
 func createRequestRouter(fileName string) map[string]string {
   r := make(map[string]string)
 
+  //TODO: Separate function for reading file
   //TODO: Error Handling
   file, _ := os.Open(fileName)
   defer file.Close()
