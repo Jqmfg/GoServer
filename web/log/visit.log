@@ -114,3 +114,9 @@ TIMESTAMP: 2015-08-18 05:12:45 (UTC) | 127.0.0.1:37523 | /templates/map.txt was 
 TIMESTAMP: 2015-08-18 05:12:54 (UTC) | 127.0.0.1:37523 | /web.go was requested | web.go was accessed
 TIMESTAMP: 2015-08-18 05:13:09 (UTC) | 127.0.0.1:37523 | /log/visit.log was requested | log/visit.log was accessed
 >>>>>>> ed3c4683e89f57362b538c970a001df9b8b9078a
+TIMESTAMP: 2015-08-24 13:32:35 (UTC) | [::1]:55284 | / was requested | templates/test.html was accessed
+TIMESTAMP: 2015-08-24 13:32:35 (UTC) | [::1]:55284 | /templates/style.css was requested | templates/style.css was accessed
+TIMESTAMP: 2015-08-24 13:32:35 (UTC) | [::1]:55284 | /favicon.ico was requested | favicon.ico was accessed
+TIMESTAMP: 2015-08-24 13:36:00 (UTC) | [::1]:55284 | / was requested | templates/test.html was accessed
+TIMESTAMP: 2015-08-24 13:36:00 (UTC) | [::1]:55284 | /templates/style.css was requested | templates/style.css was accessed
+TIMESTAMP: 2015-08-24 13:36:00 (UTC) | [::1]:55284 | /favicon.ico was requested | favicon.ico was accessed
